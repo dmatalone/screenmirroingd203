@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="D203 Connect">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#0f2d52" id="themeColor">
+<meta name="description" content="District 203 Connect — classroom screen sharing from a computer to a display device.">
+<title>District 203 Connect</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f2d52'/%3E%3Crect y='56' width='64' height='8' fill='%23f2b705'/%3E%3Ctext x='32' y='40' font-family='Arial,Helvetica,sans-serif' font-weight='700' font-size='23' text-anchor='middle' fill='white'%3E203%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0f2d52; --navy-2:#1a4274; --blue:#1d5fd1; --blue-h:#174fb2; --blue-50:#eaf1fd;
+  --gold:#f2b705;
+  --bg:#f1f4f8; --card:#ffffff; --text:#0f1c2e; --muted:#5a6a7e; --line:#dde4ee; --soft:#f6f8fb;
+  --green:#12805c; --green-50:#e5f5ee; --amber:#a86400; --amber-50:#fff4de;
+  --red:#c62828; --red-h:#a91f1f; --red-50:#fdeded;
+  --radius:22px;
+  --shadow:0 1px 2px rgba(15,28,46,.05),0 10px 30px rgba(15,28,46,.08);
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono","Segoe UI Mono",Consolas,"Roboto Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--font);background:var(--bg);color:var(--text);
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;line-height:1.45;
+}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:14px max(clamp(16px,4vw,40px),env(safe-area-inset-right)) 14px max(clamp(16px,4vw,40px),env(safe-area-inset-left));
+  padding-top:max(14px,env(safe-area-inset-top));
+  border-bottom:4px solid var(--gold);
+}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{
+  width:42px;height:42px;border-radius:11px;background:#fff;color:var(--navy);flex:none;
+  display:grid;place-items:center;font-weight:800;font-size:15px;letter-spacing:-.03em;position:relative;overflow:hidden;
+}
+.mark::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:var(--gold)}
+.brand-name{font-weight:700;font-size:18px;letter-spacing:-.01em;white-space:nowrap}
+.brand-sub{font-size:12.5px;color:#b9c8dc;font-weight:500;white-space:nowrap}
+.role-chip{
+  display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#dbe6f3;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);padding:7px 12px;border-radius:999px;white-space:nowrap;
+}
+.role-chip svg{width:16px;height:16px}
+
+/* ---------- Layout ---------- */
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vh,48px) 16px}
+.view{width:100%;display:flex;flex-direction:column;align-items:center;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid rgba(15,28,46,.05)}
+h1{margin:0;font-size:clamp(24px,3.2vw,32px);font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.lead{margin:10px 0 0;color:var(--muted);font-size:clamp(16px,2vw,18px)}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--blue)}
+.foot{
+  text-align:center;color:var(--muted);font-size:13px;padding:14px 16px max(18px,env(safe-area-inset-bottom));
+  display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:center;align-items:center;
+}
+.foot a{color:var(--blue);font-weight:600;text-decoration:none}
+.foot a:hover{text-decoration:underline}
+
+/* ---------- Status pill ---------- */
+.status{
+  display:inline-flex;align-items:center;gap:10px;padding:10px 18px;border-radius:999px;
+  font-weight:600;font-size:clamp(15px,2vw,18px);background:#eef2f7;color:#44546a;border:1px solid var(--line);
+  transition:background .25s,color .25s,border-color .25s;
+}
+.status .dot{width:10px;height:10px;border-radius:50%;background:currentColor;flex:none}
+.status[data-state=ready]{background:var(--blue-50);color:var(--blue);border-color:#cfdef8}
+.status[data-state=waiting]{background:var(--amber-50);color:var(--amber);border-color:#f3dcad}
+.status[data-state=waiting] .dot,.status[data-state=waiting-share] .dot{animation:pulse 1.6s ease-in-out infinite}
+.status[data-state=connecting]{background:var(--blue-50);color:var(--blue);border-color:#cfdef8}
+.status[data-state=connecting] .dot{background:none;border:2px solid currentColor;border-right-color:transparent;animation:spin .8s linear infinite;width:14px;height:14px}
+.status[data-state=connected]{background:var(--green-50);color:var(--green);border-color:#bfe5d4}
+.status[data-state=waiting-share]{background:var(--blue-50);color:var(--blue);border-color:#cfdef8}
+.status[data-state=sharing]{background:var(--red-50);color:var(--red);border-color:#f5c9c9}
+.status[data-state=sharing] .dot{animation:pulse 1.2s ease-in-out infinite}
+.status[data-state=disconnected]{background:var(--amber-50);color:var(--amber);border-color:#f3dcad}
+.status[data-state=failed]{background:var(--red-50);color:var(--red);border-color:#f5c9c9}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- Buttons ---------- */
+.btn{
+  appearance:none;border:0;border-radius:14px;font:inherit;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;
+  transition:transform .12s ease,box-shadow .2s,background .2s,opacity .2s;
+}
+.btn:active:not(:disabled){transform:scale(.985)}
+.btn:focus-visible{outline:3px solid #9cc0ff;outline-offset:3px}
+.btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.btn svg{width:22px;height:22px;flex:none}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 6px 18px rgba(29,95,209,.28)}
+.btn-primary:hover:not(:disabled){background:var(--blue-h)}
+.btn-danger{background:var(--red);color:#fff;box-shadow:0 6px 18px rgba(198,40,40,.25)}
+.btn-danger:hover:not(:disabled){background:var(--red-h)}
+.btn-ghost{background:transparent;color:var(--muted);font-weight:600;padding:10px 14px}
+.btn-ghost:hover{color:var(--text);background:var(--soft)}
+.btn-lg{width:100%;padding:18px 24px;font-size:18px}
+.btn-xl{padding:24px 44px;font-size:22px;border-radius:18px;min-width:min(340px,100%)}
+.btn-xl svg{width:28px;height:28px}
+.spinner{width:18px;height:18px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:spin .8s linear infinite;flex:none}
+
+/* ---------- Alerts ---------- */
+.alert{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;font-size:15px;font-weight:500;text-align:left;animation:fadeUp .25s ease both}
+.alert svg{width:20px;height:20px;flex:none;margin-top:1px}
+.alert[data-kind=error]{background:var(--red-50);color:#8f1d1d}
+.alert[data-kind=warn]{background:var(--amber-50);color:#7a4a00}
+.alert[data-kind=info]{background:var(--blue-50);color:#173f86}
+
+/* ---------- Receiver: pairing ---------- */
+.pair-card{width:min(760px,100%);padding:clamp(24px,5vw,56px) clamp(18px,4vw,56px);text-align:center;display:flex;flex-direction:column;align-items:center}
+.pair-icon{width:56px;height:56px;border-radius:16px;background:var(--blue-50);color:var(--blue);display:grid;place-items:center;margin-bottom:18px}
+.pair-icon svg{width:30px;height:30px}
+.code{
+  --g:clamp(5px,1.4vw,12px);
+  display:flex;justify-content:center;align-items:center;gap:var(--g);
+  margin:clamp(20px,4vh,40px) 0 clamp(20px,3.5vh,32px);
+  font-family:var(--mono);font-weight:700;font-size:clamp(34px,min(11.5vw,14vh),116px);line-height:1;
+}
+.code .ch{
+  width:1.08em;height:1.38em;display:grid;place-items:center;color:var(--navy);
+  background:var(--soft);border:2px solid #d3dcea;border-radius:.17em;box-shadow:inset 0 -.06em 0 #e2e8f1;
+  animation:pop .45s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:calc(var(--i) * 45ms);
+}
+.code .sep{width:calc(var(--g) * .7)}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.92)}to{opacity:1;transform:none}}
+.host-hint{margin-top:18px;color:var(--muted);font-size:14.5px}
+.host-hint b{color:var(--text);font-weight:600}
+
+/* ---------- Receiver: states ---------- */
+.state-card{width:min(620px,100%);padding:clamp(28px,5vw,52px) clamp(20px,4vw,48px);text-align:center;display:flex;flex-direction:column;align-items:center}
+.state-icon{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;margin-bottom:22px;animation:pop .45s ease both}
+.state-icon svg{width:42px;height:42px}
+.state-icon.ok{background:var(--green-50);color:var(--green)}
+.state-icon.warn{background:var(--amber-50);color:var(--amber)}
+.state-icon.bad{background:var(--red-50);color:var(--red)}
+.state-card h1{font-size:clamp(28px,4.4vw,40px)}
+.state-card .lead{margin-bottom:26px}
+.state-card .lead strong{color:var(--text)}
+.meta{margin-top:18px;font-size:14px;color:var(--muted)}
+.meta code{font-family:var(--mono);font-weight:700;color:var(--navy);letter-spacing:.08em}
+.progress{width:min(280px,80%);height:6px;border-radius:99px;background:#e6ebf2;overflow:hidden;margin-top:22px}
+.progress i{display:block;height:100%;width:0;background:var(--blue);border-radius:inherit}
+.progress.run i{animation:fill var(--dur,3.5s) linear forwards}
+@keyframes fill{to{width:100%}}
+
+/* ---------- Receiver: stage ---------- */
+#stage{
+  position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:1000;background:#000;
+  display:flex;align-items:center;justify-content:center;cursor:none;touch-action:none;
+}
+#rxVideo{width:100%;height:100%;object-fit:contain;object-position:center;background:#000;display:block;pointer-events:none}
+.stage-msg{position:absolute;display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.72);font-size:16px;font-weight:500}
+.tap-play{position:absolute;background:#fff;color:var(--navy);padding:18px 30px;border-radius:14px;font-size:18px;cursor:pointer}
+html.immersive,html.immersive body{background:#000;overflow:hidden;overscroll-behavior:none;height:100%}
+html.immersive .topbar,html.immersive main,html.immersive .foot{display:none!important}
+
+/* ---------- Computer ---------- */
+.cx-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:28px;width:min(1060px,100%);align-items:stretch}
+.cx-card{padding:clamp(28px,4vw,48px)}
+.cx-card .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.code-entry{position:relative;margin:30px 0 22px}
+.code-entry input{
+  position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;font-size:16px;z-index:2;cursor:text;
+  text-transform:uppercase;
+}
+.slots{display:flex;gap:10px;justify-content:space-between;align-items:center}
+.slot{
+  flex:1;max-width:78px;aspect-ratio:.82;border-radius:14px;border:2px solid #cfd8e5;background:var(--soft);
+  display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:clamp(28px,3.4vw,42px);color:var(--navy);
+  transition:border-color .15s,box-shadow .15s,background .15s;
+}
+.slot.filled{background:#fff;border-color:#9fb4d3}
+.slot.active{border-color:var(--blue);box-shadow:0 0 0 4px rgba(29,95,209,.15);background:#fff}
+.slot.active:empty::after{content:"";width:2px;height:.9em;background:var(--blue);animation:blink 1s step-end infinite}
+.slots .gap{flex:none;width:10px;height:3px;border-radius:2px;background:#c3cddb}
+.code-entry.invalid .slot{border-color:#e7a3a3;animation:shake .35s}
+@keyframes blink{50%{opacity:0}}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.form-stack{display:flex;flex-direction:column;gap:16px}
+.name-row{margin-top:26px;padding-top:22px;border-top:1px solid var(--line);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.name-row label{font-size:14px;font-weight:600;color:var(--text)}
+.name-row label span{display:block;font-weight:500;color:var(--muted);font-size:12.5px}
+.name-row input{
+  flex:1;min-width:180px;font:inherit;font-size:15px;padding:11px 14px;border-radius:11px;border:1.5px solid var(--line);background:#fff;color:var(--text);
+}
+.name-row input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,95,209,.14)}
+.steps-card{padding:clamp(26px,3.5vw,40px);background:linear-gradient(180deg,#fff, #fbfcfe)}
+.steps-card h2{margin:0 0 20px;font-size:17px;font-weight:700}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:18px}
+.steps li{display:flex;gap:14px;align-items:flex-start}
+.steps .n{flex:none;width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.steps b{display:block;font-size:15px}
+.steps span{color:var(--muted);font-size:14px}
+.assure{margin-top:26px;padding-top:20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.assure div{display:flex;gap:10px;align-items:center;font-size:13.5px;color:var(--muted);font-weight:500}
+.assure svg{width:18px;height:18px;color:var(--green);flex:none}
+
+.center-card{width:min(720px,100%);padding:clamp(30px,5vw,56px);text-align:center;display:flex;flex-direction:column;align-items:center}
+.center-card h1{font-size:clamp(28px,3.6vw,38px);margin-top:18px}
+.center-card .lead code,.display-code{font-family:var(--mono);font-weight:700;color:var(--navy);background:var(--soft);border:1px solid var(--line);padding:3px 10px;border-radius:8px;letter-spacing:.08em}
+.center-card .btn-xl{margin-top:34px}
+.center-card .alert{margin-top:22px;width:100%}
+.sub-help{margin-top:16px;color:var(--muted);font-size:14.5px}
+.share-opts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.share-opts span{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:#44546a;background:var(--soft);border:1px solid var(--line);padding:7px 12px;border-radius:999px}
+.share-opts svg{width:16px;height:16px}
+.actions-row{margin-top:18px}
+.live-badge{display:inline-flex;align-items:center;gap:8px;background:var(--red);color:#fff;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;border-radius:999px}
+.live-badge i{width:8px;height:8px;border-radius:50%;background:#fff;animation:pulse 1.2s infinite}
+.preview{
+  margin-top:28px;width:min(460px,100%);aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#0b1220;
+  border:1px solid #1d2a3d;box-shadow:0 10px 30px rgba(15,28,46,.18);position:relative;
+}
+.preview video{width:100%;height:100%;object-fit:contain;display:block}
+.preview .tag{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;font-weight:600;padding:4px 9px;border-radius:6px}
+
+@media (max-width:860px){
+  .cx-grid{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .brand-sub{display:none}
+  .brand-name{font-size:16px}
+  .mark{width:38px;height:38px;font-size:14px}
+  .role-chip span{display:none}
+  .pair-card{padding:26px 16px 30px}
+  .slots{gap:6px}
+  .btn-xl{width:100%;padding:20px 24px;font-size:20px}
+}
+@media (max-height:520px) and (orientation:landscape){
+  .topbar{padding-top:8px;padding-bottom:8px}
+  .brand-sub{display:none}
+  main{padding:10px 16px}
+  .pair-card{padding:16px 24px 20px}
+  .pair-icon,.state-icon{display:none}
+  .pair-card h1{font-size:22px}
+  .pair-card .lead{margin-top:4px;font-size:15px}
+  .code{margin:14px 0}
+  .host-hint{display:none}
+  .foot{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar" id="topbar">
+  <div class="brand">
+    <div class="mark" aria-hidden="true">203</div>
+    <div>
+      <div class="brand-name">District 203 Connect</div>
+      <div class="brand-sub">Classroom Display Sharing</div>
+    </div>
+  </div>
+  <div class="role-chip" id="roleChip" hidden></div>
+</header>
+
+<main id="main">
+
+  <!-- =================== RECEIVER (phone / display) =================== -->
+  <section class="view" id="rx-pair" hidden>
+    <div class="card pair-card">
+      <div class="pair-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </div>
+      <h1>Connect Your Computer</h1>
+      <p class="lead">Go to <strong>District 203 Connect</strong> on your computer and enter:</p>
+      <div class="code" id="rxCode" role="img" aria-label="Pairing code"></div>
+      <div class="status js-status" role="status" aria-live="polite"><span class="dot"></span><span class="label">Ready</span></div>
+    </div>
+    <p class="host-hint" id="rxHost" hidden></p>
+  </section>
+
+  <section class="view" id="rx-connected" hidden>
+    <div class="card state-card">
+      <div class="state-icon ok" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <h1>Connected</h1>
+      <p class="lead">Waiting for <strong id="rxName">Dominic Matalone</strong> to begin sharing…</p>
+      <div class="status js-status" role="status" aria-live="polite"><span class="dot"></span><span class="label">Waiting for Screen Share</span></div>
+      <p class="meta">Display code <code id="rxConnCode">——————</code></p>
+    </div>
+  </section>
+
+  <section class="view" id="rx-notice" hidden>
+    <div class="card state-card">
+      <div class="state-icon warn" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4M9.5 8.5l5 5M14.5 8.5l-5 5"/></svg>
+      </div>
+      <h1 id="rxNoticeTitle">Computer Disconnected</h1>
+      <p class="lead" id="rxNoticeMsg">The computer stopped sharing.</p>
+      <div class="status js-status" role="status" aria-live="polite"><span class="dot"></span><span class="label">Computer Disconnected</span></div>
+      <div class="progress" id="rxNoticeBar"><i></i></div>
+      <p class="meta">Getting a new code…</p>
+    </div>
+  </section>
+
+  <section class="view" id="rx-error" hidden>
+    <div class="card state-card">
+      <div class="state-icon bad" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9.5"/></svg>
+      </div>
+      <h1>Connection Failed</h1>
+      <p class="lead" id="rxErrorMsg">This display can’t reach the District 203 Connect service.</p>
+      <div class="status js-status" role="status" aria-live="polite"><span class="dot"></span><span class="label">Connection Failed</span></div>
+      <p class="meta" id="rxRetryText">Trying again…</p>
+      <div class="actions-row"><button class="btn btn-primary" style="padding:14px 26px" id="rxRetryBtn" type="button">Try Again Now</button></div>
+    </div>
+  </section>
+
+  <!-- =================== COMPUTER (sender) =================== -->
+  <section class="view" id="cx-connect" hidden>
+    <div class="cx-grid">
+      <div class="card cx-card">
+        <div class="head">
+          <div>
+            <div class="eyebrow">Share to a classroom display</div>
+            <h1 style="margin-top:8px">Connect to a Display</h1>
+          </div>
+          <div class="status js-status" role="status" aria-live="polite"><span class="dot"></span><span class="label">Ready</span></div>
+        </div>
+        <p class="lead">Enter the 6-character code shown on the receiving device.</p>
+        <form id="cxForm" class="form-stack" autocomplete="off" novalidate>
+          <div class="code-entry" id="cxEntry">
+            <label class="sr-only" for="cxCode">Display code</label>
+            <input id="cxCode" name="d203code" inputmode="text" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" aria-describedby="cxAlert">
+            <div class="slots" aria-hidden="true">
+              <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+              <div class="gap"></div>
+              <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+            </div>
+          </div>
+          <div class="alert" id="cxAlert" hidden></div>
+          <button class="btn btn-primary btn-lg" id="cxConnectBtn" type="submit" disabled>Connect</button>
+        </form>
+        <div class="name-row">
+          <label for="cxName">Your name<span>Shown on the display while connected</span></label>
+          <input id="cxName" type="text" maxlength="60" autocomplete="name" placeholder="Your name">
+        </div>
+      </div>
+
+      <aside class="card steps-card" aria-label="How it works">
+        <h2>How it works</h2>
+        <ol class="steps">
+          <li><div class="n">1</div><div><b>Open on the display</b><span>Open District 203 Connect on the iPhone or display device to get a code.</span></div></li>
+          <li><div class="n">2</div><div><b>Enter the code</b><span>Type the 6-character code here and select Connect.</span></div></li>
+          <li><div class="n">3</div><div><b>Choose what to share</b><span>Pick your entire screen, a window, or a browser tab.</span></div></li>
+        </ol>
+        <div class="assure">
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No account or sign-in required</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Nothing is recorded or stored</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Direct, encrypted device-to-device video</div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="view" id="cx-ready" hidden>
+    <div class="card center-card">
+      <div class="status js-status" role="status" aria-live="polite"><span class="dot"></span><span class="label">Connected</span></div>
+      <h1>Ready to Share</h1>
+      <p class="lead">Connected to: <code id="cxReadyCode">——————</code></p>
+      <button class="btn btn-primary btn-xl" id="cxShareBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4M12 13.5V7.5M9.5 10l2.5-2.5 2.5 2.5"/></svg>
+        <span id="cxShareLabel">Share Screen</span>
+      </button>
+      <div class="share-opts" aria-label="You can share">
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Entire Screen</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>Window</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8V6a2 2 0 012-2h5l2 3h7a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Browser Tab</span>
+      </div>
+      <div class="alert" id="cxReadyAlert" hidden></div>
+      <div class="actions-row"><button class="btn btn-ghost" id="cxDisconnectBtn" type="button">Disconnect</button></div>
+    </div>
+  </section>
+
+  <section class="view" id="cx-sharing" hidden>
+    <div class="card center-card">
+      <div class="live-badge"><i></i>Live</div>
+      <h1>You’re Sharing Your Screen</h1>
+      <p class="lead">Connected Display: <code id="cxShareCode">——————</code></p>
+      <div class="preview"><video id="cxPreview" playsinline autoplay muted></video><span class="tag">Preview</span></div>
+      <button class="btn btn-danger btn-xl" id="cxStopBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+        Stop Sharing
+      </button>
+      <p class="sub-help">Everything in the area you chose is visible on the display. Nothing is recorded.</p>
+    </div>
+  </section>
+
+  <!-- =================== Shared fatal / loading =================== -->
+  <section class="view" id="boot">
+    <div class="card state-card">
+      <div class="status" data-state="connecting"><span class="dot"></span><span class="label">Starting District 203 Connect…</span></div>
+    </div>
+  </section>
+
+  <section class="view" id="fatal" hidden>
+    <div class="card state-card">
+      <div class="state-icon bad" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9.5"/></svg>
+      </div>
+      <h1 id="fatalTitle">Connection Failed</h1>
+      <p class="lead" id="fatalMsg">Something went wrong.</p>
+      <div class="actions-row"><button class="btn btn-primary" style="padding:14px 26px" type="button" onclick="location.reload()">Reload</button></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot" id="foot">
+  <span>No account required · Nothing is recorded · Direct device-to-device connection</span>
+  <a id="roleSwitch" href="?role=phone" hidden></a>
+</footer>
+
+<!-- Full-screen receiving stage (no controls over the shared screen) -->
+<div id="stage" hidden aria-label="Shared screen">
+  <video id="rxVideo" playsinline autoplay muted disablepictureinpicture disableremoteplayback></video>
+  <div class="stage-msg" id="stageMsg"><span class="spinner"></span>Starting display…</div>
+  <button class="btn tap-play" id="tapPlay" type="button" hidden>Tap to Start Display</button>
+</div>
+
+<script>
+/* Load PeerJS with CDN fallbacks */
+window.__loadPeer = function (cb) {
+  var srcs = [
+    'https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js',
+    'https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'
+  ];
+  var i = 0;
+  (function next() {
+    if (window.Peer) return cb(true);
+    if (i >= srcs.length) return cb(false);
+    var s = document.createElement('script');
+    s.src = srcs[i++]; s.async = true;
+    s.onload = function () { window.Peer ? cb(true) : next(); };
+    s.onerror = next;
+    document.head.appendChild(s);
+  })();
+};
+</script>
+
+<script>
+(function () {
+'use strict';
+
+/* =====================================================================
+   CONFIGURATION
+   ===================================================================== */
+var CONFIG = {
+  PEER_PREFIX: 'd203-screen-',               // internal peer id: d203-screen-abc123
+  CODE_ALPHABET: 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', // no 0/O, 1/I/L
+  CODE_LENGTH: 6,
+  DEFAULT_PRESENTER: 'Dominic Matalone',
+  CONNECT_TIMEOUT_MS: 15000,
+  SHARE_TIMEOUT_MS: 20000,
+  HEARTBEAT_MS: 2000,
+  HEARTBEAT_TIMEOUT_MS: 20000,
+  ICE_GRACE_MS: 7000,
+  NOTICE_MS: 3500,
+  SERVICE_RETRY_MS: 5000,
+  MAX_BITRATE: 6000000,
+  MAX_FPS: 30,
+  PEER_OPTIONS: {
+    debug: 1,
+    // To use a district-hosted PeerServer instead of the free public one, add:
+    // host: 'peer.yourdistrict.org', port: 443, path: '/', secure: true,
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+        // For restrictive district networks, add a TURN server, e.g.:
+        // { urls: 'turns:turn.yourdistrict.org:443', username: '…', credential: '…' }
+      ]
+    }
+  }
+};
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+var $ = function (id) { return document.getElementById(id); };
+var params = new URLSearchParams(location.search);
+
+function genCode() {
+  var a = CONFIG.CODE_ALPHABET, buf = new Uint32Array(CONFIG.CODE_LENGTH), out = '';
+  crypto.getRandomValues(buf);
+  for (var i = 0; i < buf.length; i++) out += a[buf[i] % a.length];
+  return out;
+}
+function peerIdFor(code) { return CONFIG.PEER_PREFIX + code.toLowerCase(); }
+function cleanCode(v) { return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, CONFIG.CODE_LENGTH); }
+function cleanName(n) { var s = String(n || '').replace(/\s+/g, ' ').trim().slice(0, 60); return s || null; }
+function safe(fn) { try { return fn(); } catch (e) { return undefined; } }
+
+function detectRole() {
+  var r = (params.get('role') || '').toLowerCase();
+  if (['phone', 'display', 'receiver', 'mobile'].indexOf(r) > -1) return 'phone';
+  if (['computer', 'sender', 'pc', 'desktop'].indexOf(r) > -1) return 'computer';
+  var ua = navigator.userAgent || '';
+  if (/iPhone|iPad|iPod|Android|Mobile|Silk|Kindle/i.test(ua)) return 'phone';
+  if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return 'phone'; // iPadOS
+  return 'computer';
+}
+
+function showView(id) {
+  var views = document.querySelectorAll('.view');
+  for (var i = 0; i < views.length; i++) views[i].hidden = views[i].id !== id;
+}
+
+function setStatus(state, label) {
+  var els = document.querySelectorAll('.js-status');
+  for (var i = 0; i < els.length; i++) {
+    els[i].setAttribute('data-state', state);
+    els[i].querySelector('.label').textContent = label;
+  }
+}
+
+var ICONS = {
+  error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v5.5M12 16.5v.5"/></svg>',
+  warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L2.5 20h19z"/><path d="M12 10v4M12 17v.5"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5v.5"/></svg>'
+};
+function setAlert(el, kind, msg) {
+  if (!kind) { el.hidden = true; el.innerHTML = ''; return; }
+  el.setAttribute('data-kind', kind);
+  el.innerHTML = ICONS[kind] || '';
+  var span = document.createElement('span'); span.textContent = msg; el.appendChild(span);
+  el.hidden = false;
+}
+
+function setThemeColor(c) { safe(function () { $('themeColor').setAttribute('content', c); }); }
+
+/* Keep display awake (supported browsers only) */
+var wakeLock = null;
+function keepAwake() {
+  if (!('wakeLock' in navigator) || wakeLock || document.visibilityState !== 'visible') return;
+  navigator.wakeLock.request('screen').then(function (l) {
+    wakeLock = l; l.addEventListener('release', function () { wakeLock = null; });
+  }).catch(function () {});
+}
+
+function tryFullscreen(el) {
+  safe(function () {
+    if (document.fullscreenElement || document.webkitFullscreenElement) return;
+    var fn = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!fn) return;
+    var p = fn.call(el, { navigationUI: 'hide' });
+    if (p && p.catch) p.catch(function () {});
+  });
+}
+function exitFullscreen() {
+  safe(function () {
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+    else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+  });
+}
+
+function startHeartbeat(ctx, onDead) {
+  stopHeartbeat(ctx);
+  ctx.lastSeen = Date.now();
+  ctx.hb = setInterval(function () {
+    var c = ctx.conn;
+    if (!c) return;
+    if (c.open) safe(function () { c.send({ type: 'ping', t: Date.now() }); });
+    if (Date.now() - ctx.lastSeen > CONFIG.HEARTBEAT_TIMEOUT_MS) onDead();
+  }, CONFIG.HEARTBEAT_MS);
+}
+function stopHeartbeat(ctx) { if (ctx.hb) { clearInterval(ctx.hb); ctx.hb = null; } }
+
+/* Watch a peer connection for network loss, with a grace period for brief drops */
+function watchIce(pc, onDead, isCurrent) {
+  if (!pc || !pc.addEventListener) return;
+  var t = null;
+  pc.addEventListener('iceconnectionstatechange', function () {
+    if (!isCurrent()) { clearTimeout(t); return; }
+    var s = pc.iceConnectionState;
+    if (s === 'failed') { clearTimeout(t); onDead(); }
+    else if (s === 'disconnected') {
+      clearTimeout(t);
+      t = setTimeout(function () {
+        if (isCurrent() && (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed')) onDead();
+      }, CONFIG.ICE_GRACE_MS);
+    } else if (s === 'connected' || s === 'completed') clearTimeout(t);
+  });
+}
+
+function serviceErrorText(type) {
+  switch (type) {
+    case 'network': case 'socket-error': case 'socket-closed': case 'disconnected':
+      return 'Can’t reach the District 203 Connect service. Check this device’s internet connection.';
+    case 'server-error':
+      return 'The District 203 Connect service is temporarily unavailable.';
+    case 'browser-incompatible': case 'webrtc':
+      return 'This browser doesn’t support screen sharing connections. Use the latest Chrome, Edge, or Safari.';
+    default:
+      return 'Something interrupted the connection.';
+  }
+}
+
+/* =====================================================================
+   RECEIVER (phone / display)
+   ===================================================================== */
+var R = { peer: null, code: null, conn: null, call: null, hb: null, lastSeen: 0, name: null, sharing: false, ending: false, timers: [] };
+
+function rxLater(fn, ms) { var t = setTimeout(fn, ms); R.timers.push(t); return t; }
+function rxClearTimers() { R.timers.forEach(clearTimeout); R.timers = []; }
+
+function renderCode(code) {
+  var el = $('rxCode');
+  el.innerHTML = '';
+  for (var i = 0; i < code.length; i++) {
+    if (i === 3) { var s = document.createElement('span'); s.className = 'sep'; el.appendChild(s); }
+    var c = document.createElement('span');
+    c.className = 'ch'; c.style.setProperty('--i', i); c.textContent = code[i];
+    el.appendChild(c);
+  }
+  el.setAttribute('aria-label', 'Pairing code ' + code.split('').join(' '));
+}
+
+function rxTeardown() {
+  stopHeartbeat(R);
+  rxClearTimers();
+  rxHideStage();
+  var call = R.call, conn = R.conn, peer = R.peer;
+  R.call = R.conn = R.peer = null;
+  R.sharing = false; R.name = null;
+  safe(function () { call && call.close(); });
+  safe(function () { conn && conn.close(); });
+  safe(function () { peer && peer.destroy(); });
+}
+
+function rxStart() {
+  rxTeardown();
+  R.ending = false;
+  R.code = genCode();
+  renderCode(R.code);
+  showView('rx-pair');
+  setStatus('ready', 'Ready');
+  keepAwake();
+
+  var peer;
+  try { peer = new Peer(peerIdFor(R.code), CONFIG.PEER_OPTIONS); }
+  catch (e) { return rxServiceError('browser-incompatible'); }
+  R.peer = peer;
+  var cur = function () { return peer === R.peer; };
+
+  var openT = rxLater(function () { if (cur() && !peer.open) rxServiceError('network'); }, CONFIG.CONNECT_TIMEOUT_MS);
+
+  peer.on('open', function () {
+    if (!cur()) return;
+    clearTimeout(openT);
+    if (!R.conn) setStatus('waiting', 'Waiting for a computer to connect…');
+  });
+  peer.on('connection', function (c) { if (cur()) rxOnConn(c); else safe(function () { c.close(); }); });
+  peer.on('call', function (call) { if (cur()) rxOnCall(call); else safe(function () { call.close(); }); });
+  peer.on('disconnected', function () {
+    if (!cur() || peer.destroyed) return;
+    // Lost the signaling server; an active P2P session keeps working. Try to re-register the code.
+    rxLater(function () {
+      if (cur() && peer.disconnected && !peer.destroyed) safe(function () { peer.reconnect(); });
+    }, 1500);
+  });
+  peer.on('error', function (err) {
+    if (!cur()) return;
+    var t = err && err.type;
+    if (t === 'unavailable-id') return rxStart();             // code already in use → new code
+    if (t === 'browser-incompatible') return rxFatal(serviceErrorText(t));
+    if (R.conn) return;                                      // active session: heartbeat/ICE decide
+    rxServiceError(t);
+  });
+}
+
+function rxServiceError(type) {
+  rxTeardown();
+  R.ending = false;
+  showView('rx-error');
+  $('rxErrorMsg').textContent = serviceErrorText(type);
+  setStatus('failed', 'Connection Failed');
+  var left = Math.round(CONFIG.SERVICE_RETRY_MS / 1000);
+  var tick = function () {
+    $('rxRetryText').textContent = 'Trying again in ' + left + ' second' + (left === 1 ? '' : 's') + '…';
+    if (left-- <= 0) return rxStart();
+    rxLater(tick, 1000);
+  };
+  tick();
+}
+
+function rxFatal(msg) {
+  rxTeardown();
+  showView('fatal');
+  $('fatalMsg').textContent = msg;
+}
+
+function rxOnConn(conn) {
+  if (R.conn) {
+    // Already paired with a computer: politely refuse the second one.
+    conn.on('open', function () {
+      safe(function () { conn.send({ type: 'busy' }); });
+      setTimeout(function () { safe(function () { conn.close(); }); }, 800);
+    });
+    return;
+  }
+  R.conn = conn;
+  var opened = false;
+  var cur = function () { return conn === R.conn; };
+  setStatus('connecting', 'Connecting…');
+
+  var t = rxLater(function () {
+    if (cur() && !opened) {
+      R.conn = null; safe(function () { conn.close(); });
+      setStatus('waiting', 'Waiting for a computer to connect…');
+    }
+  }, CONFIG.CONNECT_TIMEOUT_MS);
+
+  var lost = function () { rxEndSession('The connection to the computer was lost.'); };
+
+  conn.on('open', function () {
+    if (!cur()) return;
+    opened = true; clearTimeout(t);
+    R.name = cleanName(conn.metadata && conn.metadata.name);
+    startHeartbeat(R, lost);
+    watchIce(conn.peerConnection, lost, cur);
+    safe(function () { conn.send({ type: 'welcome', code: R.code }); });
+    rxShowConnected();
+  });
+  conn.on('data', function (d) {
+    if (!cur()) return;
+    R.lastSeen = Date.now();
+    if (!d || typeof d !== 'object') return;
+    switch (d.type) {
+      case 'hello': R.name = cleanName(d.name) || R.name; $('rxName').textContent = R.name || CONFIG.DEFAULT_PRESENTER; break;
+      case 'share-start': if (!R.sharing) setStatus('connecting', 'Starting screen share…'); break;
+      case 'share-stop': rxEndSession('The computer stopped sharing.'); break;
+      case 'bye': rxEndSession('The computer disconnected.'); break;
+    }
+  });
+  var onClose = function () {
+    if (!cur()) return;
+    if (opened) rxEndSession('The computer disconnected.');
+    else { R.conn = null; setStatus('waiting', 'Waiting for a computer to connect…'); }
+  };
+  conn.on('close', onClose);
+  conn.on('error', onClose);
+}
+
+function rxShowConnected() {
+  $('rxName').textContent = R.name || CONFIG.DEFAULT_PRESENTER;
+  $('rxConnCode').textContent = R.code;
+  showView('rx-connected');
+  setStatus('waiting-share', 'Waiting for Screen Share');
+}
+
+function tuneReceivers(pc) {
+  safe(function () {
+    pc.getReceivers().forEach(function (r) {
+      safe(function () { if ('jitterBufferTarget' in r) r.jitterBufferTarget = 0; });
+      safe(function () { if ('playoutDelayHint' in r) r.playoutDelayHint = 0; });
+    });
+  });
+}
+
+function rxOnCall(call) {
+  if (!R.conn || !R.conn.open || call.peer !== R.conn.peer || R.call) { safe(function () { call.close(); }); return; }
+  R.call = call;
+  var cur = function () { return call === R.call; };
+  call.on('stream', function (stream) { if (cur()) rxShowStage(stream); });
+  call.on('close', function () { if (cur()) rxEndSession('The computer stopped sharing.'); });
+  call.on('error', function () { if (cur()) rxEndSession('The screen share was interrupted.'); });
+  try { call.answer(); } catch (e) { return rxEndSession('This display couldn’t receive the screen share.'); }
+  var pc = call.peerConnection;
+  watchIce(pc, function () { rxEndSession('The connection to the computer was lost.'); }, cur);
+  if (pc) pc.addEventListener('track', function () { tuneReceivers(pc); });
+  setStatus('connecting', 'Connecting to screen…');
+}
+
+function rxShowStage(stream) {
+  var v = $('rxVideo');
+  R.sharing = true;
+  if (v.srcObject !== stream) v.srcObject = stream;
+  v.muted = true;
+  document.documentElement.classList.add('immersive');
+  $('stage').hidden = false;
+  $('tapPlay').hidden = true;
+  if (v.readyState < 2) $('stageMsg').hidden = false;
+  setThemeColor('#000000');
+  setStatus('sharing', 'Sharing');
+  if (R.call && R.call.peerConnection) tuneReceivers(R.call.peerConnection);
+  rxPlay();
+  tryFullscreen($('stage'));   // works where allowed; CSS already covers the full viewport
+  keepAwake();
+  stream.getVideoTracks().forEach(function (t) {
+    t.addEventListener('ended', function () { if (R.sharing && v.srcObject === stream) rxEndSession('The computer stopped sharing.'); });
+  });
+}
+
+function rxPlay() {
+  var v = $('rxVideo');
+  var p = safe(function () { return v.play(); });
+  if (p && p.catch) p.catch(function () {
+    if (R.sharing) { $('stageMsg').hidden = true; $('tapPlay').hidden = false; }
+  });
+}
+
+function rxHideStage() {
+  var v = $('rxVideo');
+  safe(function () { v.pause(); });
+  v.srcObject = null;
+  v.removeAttribute('src');
+  $('stage').hidden = true;
+  $('stageMsg').hidden = false;
+  $('tapPlay').hidden = true;
+  document.documentElement.classList.remove('immersive');
+  exitFullscreen();
+  setThemeColor('#0f2d52');
+}
+
+function rxEndSession(msg) {
+  if (R.ending) return;
+  R.ending = true;
+  var conn = R.conn;
+  if (conn && conn.open) safe(function () { conn.send({ type: 'bye' }); });
+  rxTeardown();                          // removes video + exits immersive immediately
+  $('rxNoticeMsg').textContent = msg || 'The computer stopped sharing.';
+  showView('rx-notice');
+  setStatus('disconnected', 'Computer Disconnected');
+  var bar = $('rxNoticeBar');
+  bar.style.setProperty('--dur', CONFIG.NOTICE_MS + 'ms');
+  bar.classList.remove('run'); void bar.offsetWidth; bar.classList.add('run');
+  rxLater(rxStart, CONFIG.NOTICE_MS);    // automatically ready for the next computer
+}
+
+function initReceiver() {
+  $('roleChip').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg><span>Display</span>';
+  $('roleChip').hidden = false;
+  var sw = $('roleSwitch'); sw.textContent = 'Share from this device instead'; sw.href = '?role=computer'; sw.hidden = false;
+
+  if (location.protocol.indexOf('http') === 0 && location.host) {
+    var h = $('rxHost');
+    h.innerHTML = 'On your computer, open <b></b>';
+    h.querySelector('b').textContent = location.host + location.pathname.replace(/index\.html$/, '');
+    h.hidden = false;
+  }
+
+  $('rxRetryBtn').addEventListener('click', rxStart);
+  $('tapPlay').addEventListener('click', function (e) { e.stopPropagation(); $('tapPlay').hidden = true; rxPlay(); tryFullscreen($('stage')); });
+  $('stage').addEventListener('click', function () { tryFullscreen($('stage')); rxPlay(); });
+  $('rxVideo').addEventListener('playing', function () { $('stageMsg').hidden = true; $('tapPlay').hidden = true; });
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible') return;
+    keepAwake();
+    if (R.conn) R.lastSeen = Date.now();               // give the session a moment to prove it's alive
+    if (R.sharing) rxPlay();
+    var p = R.peer;
+    if (p && !p.destroyed && p.disconnected && !R.conn) safe(function () { p.reconnect(); });
+  });
+  document.addEventListener('pointerdown', keepAwake, { passive: true });
+  window.addEventListener('pagehide', function () {
+    var c = R.conn; if (c && c.open) safe(function () { c.send({ type: 'bye' }); });
+  });
+  window.addEventListener('online', function () {
+    if (!R.conn && R.peer && R.peer.disconnected && !R.peer.destroyed) safe(function () { R.peer.reconnect(); });
+  });
+
+  rxStart();
+}
+
+/* =====================================================================
+   COMPUTER (sender)
+   ===================================================================== */
+var C = { peer: null, conn: null, call: null, stream: null, code: null, hb: null, lastSeen: 0, phase: 'idle', timers: [] };
+var DEFAULT_TITLE = document.title;
+
+function cTeardown(notify) {
+  stopHeartbeat(C);
+  C.timers.forEach(clearTimeout); C.timers = [];
+  var peer = C.peer, conn = C.conn, call = C.call, stream = C.stream;
+  C.peer = C.conn = C.call = C.stream = null;
+  C.phase = 'idle';
+  if (stream) stream.getTracks().forEach(function (t) { t.onended = null; safe(function () { t.stop(); }); });
+  $('cxPreview').srcObject = null;
+  document.title = DEFAULT_TITLE;
+  if (notify && conn && conn.open) safe(function () { conn.send({ type: notify }); });
+  safe(function () { call && call.close(); });
+  var finish = function () { safe(function () { conn && conn.close(); }); safe(function () { peer && peer.destroy(); }); };
+  if (notify) setTimeout(finish, 300); else finish();   // let the final message reach the display
+}
+
+function nameValue() { return cleanName($('cxName').value) || CONFIG.DEFAULT_PRESENTER; }
+
+function setConnectBusy(busy) {
+  var b = $('cxConnectBtn');
+  if (busy) { b.disabled = true; b.innerHTML = '<span class="spinner"></span>Connecting…'; }
+  else { b.textContent = 'Connect'; b.disabled = cleanCode($('cxCode').value).length !== CONFIG.CODE_LENGTH; }
+  $('cxCode').disabled = !!busy;
+}
+
+function cShowConnect(kind, msg, statusState, statusLabel) {
+  showView('cx-connect');
+  setConnectBusy(false);
+  setAlert($('cxAlert'), kind, msg);
+  setStatus(statusState || 'ready', statusLabel || 'Ready');
+  setTimeout(function () { safe(function () { $('cxCode').focus(); $('cxCode').select(); }); }, 50);
+}
+
+function cFail(msg) {
+  cTeardown();
+  cShowConnect('error', msg, 'failed', 'Connection Failed');
+  var e = $('cxEntry'); e.classList.remove('invalid'); void e.offsetWidth; e.classList.add('invalid');
+}
+
+function cLost(msg) {
+  if (C.phase === 'idle') return;
+  cTeardown('bye');
+  cShowConnect('warn', msg + ' Enter the new code shown on the display to reconnect.', 'disconnected', 'Display Disconnected');
+  $('cxCode').value = ''; renderSlots();
+}
+
+function cConnect(code) {
+  cTeardown();
+  C.phase = 'connecting'; C.code = code;
+  setAlert($('cxAlert'), null);
+  $('cxEntry').classList.remove('invalid');
+  setConnectBusy(true);
+  setStatus('connecting', 'Connecting…');
+  var name = nameValue();
+
+  var peer;
+  try { peer = new Peer(CONFIG.PEER_OPTIONS); }
+  catch (e) { return cFail(serviceErrorText('browser-incompatible')); }
+  C.peer = peer;
+  var cur = function () { return peer === C.peer; };
+
+  C.timers.push(setTimeout(function () {
+    if (cur() && C.phase === 'connecting')
+      cFail('Couldn’t connect to display ' + code + '. Make sure the code is correct and the display is still showing it.');
+  }, CONFIG.CONNECT_TIMEOUT_MS));
+
+  peer.on('open', function () {
+    if (!cur()) return;
+    var conn = peer.connect(peerIdFor(code), { reliable: true, serialization: 'json', metadata: { name: name } });
+    if (!conn) return cFail('Couldn’t start the connection. Please try again.');
+    C.conn = conn;
+    var ccur = function () { return conn === C.conn; };
+    var lost = function () { cLost('The connection to the display was lost.'); };
+
+    conn.on('open', function () {
+      if (!ccur()) return;
+      C.phase = 'connected';
+      safe(function () { conn.send({ type: 'hello', name: name }); });
+      startHeartbeat(C, lost);
+      watchIce(conn.peerConnection, lost, ccur);
+      cShowReady();
+    });
+    conn.on('data', function (d) {
+      if (!ccur()) return;
+      C.lastSeen = Date.now();
+      if (!d || typeof d !== 'object') return;
+      if (d.type === 'busy') cFail('That display is already connected to another computer.');
+      else if (d.type === 'bye') cLost('The display disconnected.');
+    });
+    var onClose = function () {
+      if (!ccur()) return;
+      if (C.phase === 'connecting') cFail('The display didn’t accept the connection. Check the code and try again.');
+      else cLost('The display disconnected.');
+    };
+    conn.on('close', onClose);
+    conn.on('error', onClose);
+  });
+
+  peer.on('error', function (err) {
+    if (!cur()) return;
+    var t = err && err.type;
+    if (t === 'peer-unavailable') {
+      if (C.phase === 'connecting') return cFail('No display found with code ' + code + '. Check the code on the display and try again.');
+      return cLost('The display is no longer available.');
+    }
+    if (C.phase === 'connecting') return cFail(serviceErrorText(t));
+    if (['network', 'server-error', 'socket-error', 'socket-closed', 'disconnected'].indexOf(t) > -1) return; // P2P may still be alive
+    cLost('The connection was interrupted.');
+  });
+
+  peer.on('disconnected', function () {
+    if (!cur() || peer.destroyed || C.phase === 'connecting') return;
+    C.timers.push(setTimeout(function () {
+      if (cur() && peer.disconnected && !peer.destroyed) safe(function () { peer.reconnect(); });
+    }, 1500));
+  });
+}
+
+function cShowReady() {
+  $('cxReadyCode').textContent = C.code;
+  setAlert($('cxReadyAlert'), null);
+  resetShareBtn();
+  showView('cx-ready');
+  setStatus('connected', 'Connected');
+  setTimeout(function () { safe(function () { $('cxShareBtn').focus(); }); }, 50);
+}
+
+function resetShareBtn() { $('cxShareBtn').disabled = false; $('cxShareLabel').textContent = 'Share Screen'; }
+
+function tuneSender(pc) {
+  safe(function () {
+    pc.getSenders().forEach(function (s) {
+      if (!s.track || s.track.kind !== 'video') return;
+      safe(function () {
+        var p = s.getParameters();
+        if (!p.encodings || !p.encodings.length) return;
+        p.encodings[0].maxBitrate = CONFIG.MAX_BITRATE;
+        p.encodings[0].maxFramerate = CONFIG.MAX_FPS;
+        p.degradationPreference = 'maintain-resolution';   // keep text crisp
+        var r = s.setParameters(p); if (r && r.catch) r.catch(function () {});
+      });
+    });
+  });
+}
+
+function cShare() {
+  if (C.phase !== 'connected') return;
+  var md = navigator.mediaDevices;
+  if (!md || !md.getDisplayMedia) {
+    return setAlert($('cxReadyAlert'), 'error', window.isSecureContext
+      ? 'This browser can’t share its screen. Use the latest Google Chrome or Microsoft Edge on Windows.'
+      : 'Screen sharing requires a secure (https://) connection. Open District 203 Connect from its https address.');
+  }
+  setAlert($('cxReadyAlert'), null);
+  $('cxShareBtn').disabled = true;
+  $('cxShareLabel').textContent = 'Choose what to share…';
+
+  md.getDisplayMedia({
+    video: { frameRate: { ideal: CONFIG.MAX_FPS, max: CONFIG.MAX_FPS }, width: { max: 1920 }, height: { max: 1080 }, cursor: 'always' },
+    audio: false,
+    selfBrowserSurface: 'exclude',
+    surfaceSwitching: 'include',
+    monitorTypeSurfaces: 'include'
+  }).then(function (stream) {
+    if (C.phase !== 'connected' || !C.conn || !C.conn.open || !C.peer) {
+      stream.getTracks().forEach(function (t) { t.stop(); });
+      return;
+    }
+    cStartCall(stream);
+  }).catch(function (e) {
+    if (C.phase !== 'connected') return;
+    resetShareBtn();
+    var n = e && e.name;
+    if (n === 'NotAllowedError' || n === 'AbortError') {
+      var sys = /system/i.test((e && e.message) || '');
+      setAlert($('cxReadyAlert'), sys ? 'error' : 'info', sys
+        ? 'Screen sharing is blocked by this computer’s settings. Allow screen recording for your browser, then try again.'
+        : 'Screen sharing was cancelled. Select Share Screen to try again.');
+    } else if (n === 'NotReadableError') {
+      setAlert($('cxReadyAlert'), 'error', 'Your screen couldn’t be captured. Close other apps that may be using it and try again.');
+    } else {
+      setAlert($('cxReadyAlert'), 'error', 'Screen sharing couldn’t start. Please try again.');
+    }
+  });
+}
+
+function cStartCall(stream) {
+  C.stream = stream;
+  C.phase = 'sharing';
+  var track = stream.getVideoTracks()[0];
+  if (track) {
+    safe(function () { track.contentHint = 'detail'; });
+    track.onended = function () { if (C.stream === stream) cStopSharing(true); };   // browser "Stop sharing" bar
+  }
+  safe(function () { C.conn.send({ type: 'share-start' }); });
+
+  var call = safe(function () { return C.peer.call(C.conn.peer, stream, { metadata: { name: nameValue() } }); });
+  if (!call) return cLost('The screen share couldn’t start.');
+  C.call = call;
+  var cc = function () { return call === C.call; };
+  call.on('close', function () { if (cc()) cLost('The display disconnected.'); });
+  call.on('error', function () { if (cc()) cLost('The screen share was interrupted.'); });
+
+  var pc = call.peerConnection, live = false;
+  var onLive = function () { if (!live) { live = true; tuneSender(pc); } };
+  if (pc) {
+    pc.addEventListener('connectionstatechange', function () { if (pc.connectionState === 'connected') onLive(); });
+    pc.addEventListener('iceconnectionstatechange', function () {
+      if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') onLive();
+    });
+    watchIce(pc, function () { cLost('The connection to the display was lost.'); }, cc);
+  }
+  C.timers.push(setTimeout(function () {
+    if (cc() && !live) cLost('The screen share couldn’t reach the display. The network may be blocking direct connections.');
+  }, CONFIG.SHARE_TIMEOUT_MS));
+
+  $('cxShareCode').textContent = C.code;
+  var pv = $('cxPreview'); pv.srcObject = stream; safe(function () { var p = pv.play(); p && p.catch && p.catch(function () {}); });
+  showView('cx-sharing');
+  setStatus('sharing', 'Sharing');
+  document.title = '● Sharing — District 203 Connect';
+}
+
+function cStopSharing(fromBrowser) {
+  if (C.phase === 'idle') return;
+  cTeardown('share-stop');
+  cShowConnect('info', fromBrowser
+    ? 'Screen sharing was ended from the browser. The display is ready for a new connection.'
+    : 'Screen sharing stopped. The display is ready for a new connection.');
+  $('cxCode').value = ''; renderSlots();
+}
+
+/* ---- code entry ---- */
+function renderSlots() {
+  var input = $('cxCode');
+  var v = cleanCode(input.value);
+  var slots = document.querySelectorAll('#cxEntry .slot');
+  var focused = document.activeElement === input;
+  for (var i = 0; i < slots.length; i++) {
+    slots[i].textContent = v[i] || '';
+    slots[i].classList.toggle('filled', !!v[i]);
+    slots[i].classList.toggle('active', focused && i === Math.min(v.length, slots.length - 1) && !input.disabled);
+  }
+  if (C.phase === 'idle') $('cxConnectBtn').disabled = v.length !== CONFIG.CODE_LENGTH;
+}
+
+function initComputer() {
+  $('roleChip').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg><span>Computer</span>';
+  $('roleChip').hidden = false;
+  var sw = $('roleSwitch'); sw.textContent = 'Use this device as a display'; sw.href = '?role=phone'; sw.hidden = false;
+
+  var input = $('cxCode');
+  input.addEventListener('input', function () {
+    var v = cleanCode(input.value);
+    if (input.value !== v) input.value = v;
+    $('cxEntry').classList.remove('invalid');
+    if (!$('cxAlert').hidden && $('cxAlert').getAttribute('data-kind') === 'error') { setAlert($('cxAlert'), null); setStatus('ready', 'Ready'); }
+    renderSlots();
+  });
+  ['focus', 'blur', 'keyup', 'click', 'select'].forEach(function (ev) { input.addEventListener(ev, renderSlots); });
+
+  $('cxForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = cleanCode(input.value);
+    if (v.length !== CONFIG.CODE_LENGTH) {
+      setAlert($('cxAlert'), 'error', 'Enter all 6 characters of the code shown on the display.');
+      var en = $('cxEntry'); en.classList.remove('invalid'); void en.offsetWidth; en.classList.add('invalid');
+      return;
+    }
+    cConnect(v);
+  });
+
+  var nameEl = $('cxName');
+  var saved = safe(function () { return localStorage.getItem('d203connect.name'); });
+  nameEl.value = cleanName(params.get('name')) || cleanName(saved) || CONFIG.DEFAULT_PRESENTER;
+  nameEl.addEventListener('change', function () {
+    var n = cleanName(nameEl.value);
+    safe(function () { n ? localStorage.setItem('d203connect.name', n) : localStorage.removeItem('d203connect.name'); });
+  });
+
+  $('cxShareBtn').addEventListener('click', cShare);
+  $('cxStopBtn').addEventListener('click', function () { cStopSharing(false); });
+  $('cxDisconnectBtn').addEventListener('click', function () {
+    cTeardown('bye');
+    cShowConnect('info', 'Disconnected from the display.');
+    $('cxCode').value = ''; renderSlots();
+  });
+
+  window.addEventListener('pagehide', function () {
+    var c = C.conn; if (c && c.open) safe(function () { c.send({ type: C.phase === 'sharing' ? 'share-stop' : 'bye' }); });
+    if (C.stream) C.stream.getTracks().forEach(function (t) { safe(function () { t.stop(); }); });
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && C.conn) C.lastSeen = Date.now();
+  });
+
+  var pre = cleanCode(params.get('code'));
+  if (pre) input.value = pre;
+  cShowConnect(null);
+  if (!window.isSecureContext) {
+    setAlert($('cxAlert'), 'warn', 'This page isn’t on a secure (https://) connection, so screen sharing will be blocked by the browser.');
+  }
+  renderSlots();
+}
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+function boot() {
+  var role = detectRole();
+  document.documentElement.setAttribute('data-role', role);
+  if (!window.RTCPeerConnection) {
+    showView('fatal');
+    $('fatalMsg').textContent = serviceErrorText('browser-incompatible');
+    return;
+  }
+  window.__loadPeer(function (ok) {
+    if (!ok) {
+      showView('fatal');
+      $('fatalTitle').textContent = 'Connection Failed';
+      $('fatalMsg').textContent = 'District 203 Connect couldn’t load its connection service. Check your internet connection and reload.';
+      return;
+    }
+    if (role === 'phone') initReceiver(); else initComputer();
+  });
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+})();
+</script>
+</body>
+</html>
